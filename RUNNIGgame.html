@@ -1,0 +1,485 @@
+I'll create a simple but engaging runner game using HTML, CSS, and JavaScript. This will be a single-file implementation with smooth animations, responsive design, and clean code.
+
+Here's our runner game where the player jumps over obstacles:
+
+`runner-game.html`
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Runner - Endless Jumper Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 300px;
+            background: linear-gradient(to bottom, #1a1a2e, #16213e);
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        #score-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #f8f8f8;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            z-index: 100;
+        }
+
+        #player {
+            position: absolute;
+            width: 50px;
+            height: 70px;
+            background-color: #00e676;
+            bottom: 0;
+            left: 100px;
+            border-radius: 10px 10px 0 0;
+            z-index: 10;
+            transition: transform 0.1s;
+        }
+
+        .player-jump {
+            transform: translateY(-100px);
+            animation: jump 0.5s linear;
+        }
+
+        @keyframes jump {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-100px); }
+            100% { transform: translateY(0); }
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 30px;
+            height: 60px;
+            background-color: #ff3d00;
+            bottom: 0;
+            right: -30px;
+            border-radius: 5px 5px 0 0;
+            z-index: 5;
+        }
+
+        #ground {
+            position: absolute;
+            width: 100%;
+            height: 5px;
+            background-color: #4caf50;
+            bottom: 0;
+            z-index: 1;
+        }
+
+        #start-screen, #game-over-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 20;
+        }
+
+        #game-over-screen {
+            display: none;
+        }
+
+        .game-title {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #00e676;
+            text-shadow: 0 0 10px rgba(0, 230, 118, 0.7);
+        }
+
+        .btn {
+            padding: 10px 30px;
+            font-size: 18px;
+            background-color: #00e676;
+            color: #121212;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #00c853;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);
+        }
+
+        .instructions {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #f8f8f8;
+            text-align: center;
+        }
+
+        #stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+
+        #mountains {
+            position: absolute;
+            width: 100%;
+            height: 120px;
+            bottom: 5px;
+            z-index: 2;
+        }
+
+        .mountain {
+            position: absolute;
+            bottom: 0;
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 120px solid #1e3c72;
+        }
+
+        .cloud {
+            position: absolute;
+            width: 80px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            z-index: 3;
+            animation: cloud-move 20s linear infinite;
+        }
+
+        @keyframes cloud-move {
+            from { transform: translateX(800px); }
+            to { transform: translateX(-100px); }
+        }
+
+        @media (max-width: 850px) {
+            #game-container {
+                width: 95vw;
+                height: 30vh;
+            }
+
+            #player {
+                width: 30px;
+                height: 50px;
+                left: 50px;
+            }
+
+            .obstacle {
+                width: 20px;
+                height: 40px;
+            }
+
+            .game-title {
+                font-size: 24px;
+            }
+
+            .btn {
+                padding: 8px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="stars"></div>
+        <div id="mountains"></div>
+        <div id="player"></div>
+        <div id="ground"></div>
+        <div id="score-display">0</div>
+        
+        <div id="start-screen">
+            <h1 class="game-title">NEON RUNNER</h1>
+            <button class="btn" id="start-btn">START GAME</button>
+            <p class="instructions">Press SPACE or UP to jump<br>Dodge the obstacles and stay alive!</p>
+        </div>
+        
+        <div id="game-over-screen">
+            <h1 class="game-title">GAME OVER</h1>
+            <p id="final-score" style="margin-bottom: 20px;">Score: 0</p>
+            <button class="btn" id="restart-btn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        let gameRunning = false;
+        let score = 0;
+        let gameSpeed = 5;
+        let obstacleInterval = 1500;
+        let lastObstacleTime = 0;
+        let playerJumping = false;
+        let animationFrameId;
+        let obstacles = [];
+        let clouds = [];
+        let mountains = [];
+
+        // DOM elements
+        const gameContainer = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        const scoreDisplay = document.getElementById('score-display');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const starsContainer = document.getElementById('stars');
+        const mountainsContainer = document.getElementById('mountains');
+
+        // Create background elements
+        function createBackgroundElements() {
+            // Create stars
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                starsContainer.appendChild(star);
+            }
+
+            // Create mountains
+            for (let i = 0; i < 3; i++) {
+                const mountain = document.createElement('div');
+                mountain.className = 'mountain';
+                mountain.style.left = `${i * 300}px`;
+                mountainsContainer.appendChild(mountain);
+                mountains.push(mountain);
+            }
+
+            // Create clouds
+            for (let i = 0; i < 4; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.style.top = `${20 + Math.random() * 100}px`;
+                cloud.style.left = `${Math.random() * 800}px`;
+                cloud.style.animationDelay = `${Math.random() * 5}s`;
+                gameContainer.appendChild(cloud);
+                clouds.push(cloud);
+            }
+        }
+
+        // Initialize game
+        function initGame() {
+            createBackgroundElements();
+            
+            startBtn.addEventListener('click', startGame);
+            restartBtn.addEventListener('click', restartGame);
+            
+            document.addEventListener('keydown', (e) => {
+                if ((e.code === 'Space' || e.key === ' ' || e.key === 'ArrowUp') && gameRunning && !playerJumping) {
+                    jump();
+                }
+                
+                if ((e.code === 'Space' || e.key === ' ' || e.key === 'ArrowUp') && !gameRunning && gameOverScreen.style.display === 'flex') {
+                    restartGame();
+                }
+            });
+        }
+
+        // Start game
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            gameSpeed = 5;
+            obstacleInterval = 1500;
+            playerJumping = false;
+            obstacles = [];
+            
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            
+            player.classList.remove('player-jump');
+            player.style.bottom = '0';
+            
+            // Clear any existing obstacles
+            document.querySelectorAll('.obstacle').forEach(obs => obs.remove());
+            
+            // Start game loop
+            gameLoop();
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            updateScore();
+            updateObstacles();
+            updateBackgroundElements();
+            checkCollisions();
+            
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Update score
+        function updateScore() {
+            score++;
+            scoreDisplay.textContent = Math.floor(score / 10);
+            
+            // Increase difficulty as score increases
+            if (score % 500 === 0) {
+                gameSpeed += 0.5;
+            }
+            
+            if (score % 1000 === 0 && obstacleInterval > 800) {
+                obstacleInterval -= 100;
+            }
+        }
+
+        // Update obstacles
+        function updateObstacles() {
+            const currentTime = Date.now();
+            
+            // Create new obstacle
+            if (currentTime - lastObstacleTime > obstacleInterval) {
+                createObstacle();
+                lastObstacleTime = currentTime;
+            }
+            
+            // Move existing obstacles
+            obstacles.forEach((obstacle, index) => {
+                const obstacleElement = obstacle.element;
+                const obstacleLeft = parseFloat(obstacleElement.style.left) || gameContainer.offsetWidth;
+                
+                obstacleElement.style.left = `${obstacleLeft - gameSpeed}px`;
+                
+                // Remove obstacle when it's off screen
+                if (obstacleLeft + parseInt(obstacleElement.style.width) < 0) {
+                    obstacleElement.remove();
+                    obstacles.splice(index, 1);
+                }
+            });
+        }
+
+        // Create new obstacle
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.className = 'obstacle';
+            obstacle.style.height = `${40 + Math.random() * 60}px`;
+            obstacle.style.left = `${gameContainer.offsetWidth}px`;
+            gameContainer.appendChild(obstacle);
+            
+            obstacles.push({
+                element: obstacle,
+                height: parseInt(obstacle.style.height)
+            });
+        }
+
+        // Update background elements
+        function updateBackgroundElements() {
+            // Move mountains
+            mountains.forEach(mountain => {
+                const currentLeft = parseInt(mountain.style.left);
+                mountain.style.left = `${currentLeft - gameSpeed * 0.2}px`;
+                
+                if (currentLeft + 200 < 0) {
+                    mountain.style.left = `${gameContainer.offsetWidth}px`;
+                }
+            });
+            
+            // Move clouds
+            clouds.forEach(cloud => {
+                const currentLeft = parseInt(cloud.style.left);
+                cloud.style.left = `${currentLeft - gameSpeed * 0.1}px`;
+                
+                if (currentLeft + 100 < 0) {
+                    cloud.style.left = `${gameContainer.offsetWidth}px`;
+                }
+            });
+        }
+
+        // Player jump
+        function jump() {
+            if (playerJumping) return;
+            
+            playerJumping = true;
+            player.classList.add('player-jump');
+            
+            setTimeout(() => {
+                player.classList.remove('player-jump');
+                playerJumping = false;
+            }, 500);
+        }
+
+        // Check for collisions
+        function checkCollisions() {
+            const playerRect = player.getBoundingClientRect();
+            
+            obstacles.forEach(obstacle => {
+                const obstacleRect = obstacle.element.getBoundingClientRect();
+                
+                if (
+                    playerRect.right > obstacleRect.left &&
+                    playerRect.left < obstacleRect.right &&
+                    playerRect.bottom > obstacleRect.top &&
+                    playerRect.top < obstacleRect.bottom
+                ) {
+                    gameOver();
+                }
+            });
+        }
+
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            
+            finalScoreDisplay.textContent = `Score: ${Math.floor(score / 10)}`;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        // Restart game
+        function restartGame() {
+            gameOverScreen.style.display = 'none';
+            startGame();
+        }
+
+        // Initialize the game when page loads
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
+
+```
